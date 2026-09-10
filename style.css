@@ -1,0 +1,322 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #e8cd9b;
+  font-family: Arial, Helvetica, sans-serif;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#game {
+  position: relative;
+  width: min(100%, 66.667dvh);
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+  margin: 0 auto;
+}
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+#loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: #f7dca9;
+  color: #514763;
+  font-size: 18px;
+  font-weight: 700;
+  z-index: 30;
+}
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #b7afc4;
+  border-top-color: #873acb;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+#hud {
+  position: absolute;
+  left: 50%;
+  top: max(14px, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  width: min(420px, 90vw);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  pointer-events: none;
+  z-index: 3;
+}
+.icon-button {
+  pointer-events: auto;
+  border: 2px solid #fff9;
+  border-radius: 14px;
+  background: #fff9;
+  box-shadow: 0 3px 0 #78717b30;
+  color: #62586e;
+  width: 42px;
+  height: 42px;
+  font-size: 26px;
+  font-weight: 700;
+}
+#progress {
+  flex: 1;
+  height: 11px;
+  border: 2px solid #fff9;
+  border-radius: 8px;
+  background: #73658035;
+  overflow: hidden;
+}
+#progress-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #8bdb46;
+  transition: width 0.5s;
+  border-radius: 8px;
+}
+#labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.truck-label {
+  position: absolute;
+  font-weight: 900;
+  color: white;
+  font-size: 15px;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 2px #000,
+    1px 0 1px #000,
+    -1px 0 1px #000;
+  transform: translate(-50%, -50%);
+}
+#hint {
+  position: absolute;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 11px 21px;
+  background: #fffd;
+  border-radius: 24px;
+  color: #51435f;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px #4e375113;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+#hint:empty {
+  opacity: 0;
+}
+#tutorial {
+  position: absolute;
+  filter: drop-shadow(0 2px 2px #41304580);
+  pointer-events: none;
+  z-index: 4;
+}
+@keyframes tap {
+  50% {
+    transform: rotate(45deg) scale(0.88);
+  }
+}
+#result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #45385865;
+  backdrop-filter: blur(3px);
+  z-index: 20;
+}
+.hidden {
+  display: none !important;
+}
+.result-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 30px 36px 34px;
+  box-shadow: 0 10px 0 #0002;
+  text-align: center;
+  width: min(320px, 86vw);
+  animation: appear 0.35s ease-out;
+}
+#result-icon {
+  font-size: 70px;
+  color: #ffc92d;
+  text-shadow: 0 4px 0 #e78d29;
+}
+.result-card h1 {
+  font-size: 32px;
+  color: #553a71;
+  margin: 10px 0;
+}
+.result-card p {
+  color: #7a6b88;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.result-card button {
+  background: #87d943;
+  border: 2px solid #c1f78e;
+  border-radius: 16px;
+  color: #fff;
+  text-shadow: 0 2px 0 #56822d;
+  box-shadow: 0 5px 0 #5ea528;
+  font-weight: 900;
+  font-size: 21px;
+  padding: 13px 30px;
+  width: 100%;
+}
+@keyframes appear {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.a11y-vehicles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.a11y-vehicles button {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+.a11y-vehicles button:focus-visible {
+  clip-path: none;
+  left: 50% !important;
+  top: auto !important;
+  bottom: 70px;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  max-width: 85%;
+  padding: 10px;
+  border: 3px solid #9c59ce;
+  border-radius: 10px;
+  background: white;
+  color: #4c345d;
+  z-index: 10;
+  pointer-events: auto;
+}
+/* Keep utility controls in the ad footer, clear of the fruit queue. */
+#hud {
+  top: auto;
+  bottom: max(16px, env(safe-area-inset-bottom));
+}
+#hint {
+  bottom: max(72px, calc(env(safe-area-inset-bottom) + 56px));
+}
+#hud {
+  width: auto;
+  left: auto;
+  right: 12px;
+  bottom: 12px;
+  transform: none;
+}
+#sound,
+#progress {
+  display: none;
+}
+.icon-button {
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  background: #fff8;
+  border: 1px solid #fffc;
+  border-radius: 50%;
+  color: #846b49;
+  box-shadow: none;
+}
+#tutorial {
+  width: 74px;
+  height: 74px;
+  filter: none;
+  /* Anchor the original sprite's fingertip, not its image corner. */
+  transform: translate(-27.51%, -11.35%);
+}
+#tutorial img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: rotate(45deg);
+  transform-origin: 27.51% 11.35%;
+  animation: tap 1s ease-in-out infinite;
+}
+.truck-label {
+  font-family: "Lilita One", Arial, sans-serif;
+  line-height: 1;
+  padding: 0;
+  border: 0;
+  text-shadow:
+    0 1px 0 #000,
+    0.5px 0 0 #000,
+    -0.5px 0 0 #000;
+}
+@font-face {
+  font-family: "Lilita One";
+  src: url("./assets/LilitaOne-Regular.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+.slot-popup {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  color: white;
+  font-size: 23px;
+  font-weight: 900;
+  text-shadow:
+    2px 2px #82432e,
+    -1px -1px #82432e;
+  animation: slotPopup 1.05s ease-out forwards;
+}
+@keyframes slotPopup {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  15% {
+    opacity: 1;
+    scale: 1.1;
+  }
+  35% {
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -35px;
+  }
+}

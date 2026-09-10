@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f7dca9" />
+    <meta
+      name="description"
+      content="Clear the traffic and collect matching fruit in Farm Rush CPI."
+    />
+    <title>Farm Rush CPI</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three.module.js",
+          "three/addons/": "./vendor/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main id="game" aria-label="Farm Rush CPI parking puzzle">
+      <canvas
+        id="scene"
+        aria-label="Tap a vehicle with a clear path to collect matching fruit"
+      ></canvas>
+      <div id="loading" role="status">
+        <span class="spinner"></span>Loading…
+      </div>
+      <div id="hud">
+        <button
+          id="sound"
+          class="icon-button"
+          aria-label="Enable sound"
+          title="Sound"
+        >
+          ♪
+        </button>
+        <div id="progress" aria-label="Level progress">
+          <span id="progress-fill"></span>
+        </div>
+        <button
+          id="restart"
+          class="icon-button"
+          aria-label="Restart level"
+          title="Restart"
+        >
+          ↻
+        </button>
+      </div>
+      <div id="labels" aria-hidden="true"></div>
+      <div id="vehicles" class="a11y-vehicles" aria-label="Vehicles"></div>
+      <div id="hint" role="status"></div>
+      <div id="tutorial" aria-hidden="true">
+        <img src="./assets/hand_icon.png" alt="" />
+      </div>
+      <section id="result" class="hidden" aria-live="polite">
+        <div class="result-card">
+          <div id="result-icon">★</div>
+          <h1 id="result-title">Well done!</h1>
+          <p id="result-copy">You cleared every truck.</p>
+          <button id="replay">Play again</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

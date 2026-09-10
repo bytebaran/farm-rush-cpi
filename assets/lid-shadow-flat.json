@@ -1,0 +1,125 @@
+{
+  "Bus": {
+    "texture": "PickupRollicShadow.png",
+    "ppu": 100,
+    "borderPixels": [
+      150,
+      150,
+      150,
+      150
+    ],
+    "mode": "Sliced",
+    "sizeBeforeScale": [
+      3.9936965,
+      3.501033
+    ],
+    "tintRGBA": [
+      1,
+      1,
+      1,
+      0.2509804
+    ],
+    "sortingOrder": 1,
+    "flattenedBusLocal": {
+      "position": [
+        -4.127557064973614e-08,
+        1.0029999880709999,
+        -0.40510021944646246
+      ],
+      "scale": [
+        0.22217880924503,
+        0.222180928442938,
+        0.222180928442938
+      ],
+      "widthAfterScale": 0.887314732856044,
+      "heightAfterScale": 0.7778627624493646,
+      "rotationEulerDegrees": [
+        90,
+        0,
+        0
+      ]
+    }
+  },
+  "Bus_02": {
+    "texture": "PickupRollicShadow.png",
+    "ppu": 100,
+    "borderPixels": [
+      150,
+      150,
+      150,
+      150
+    ],
+    "mode": "Sliced",
+    "sizeBeforeScale": [
+      3.9936965,
+      5.115881
+    ],
+    "tintRGBA": [
+      1,
+      1,
+      1,
+      0.2509804
+    ],
+    "sortingOrder": 1,
+    "flattenedBusLocal": {
+      "position": [
+        -4.127557064973614e-08,
+        0.9966000315227884,
+        -0.41380008730472295
+      ],
+      "scale": [
+        0.22217880924503,
+        0.222180924185211,
+        0.222180924185211
+      ],
+      "widthAfterScale": 0.887314732856044,
+      "heightAfterScale": 1.1366511686015615,
+      "rotationEulerDegrees": [
+        90,
+        0,
+        0
+      ]
+    }
+  },
+  "Bus_03": {
+    "texture": "PickupRollicShadow.png",
+    "ppu": 100,
+    "borderPixels": [
+      150,
+      150,
+      150,
+      150
+    ],
+    "mode": "Sliced",
+    "sizeBeforeScale": [
+      3.9936965,
+      8.059969
+    ],
+    "tintRGBA": [
+      1,
+      1,
+      1,
+      0.2509804
+    ],
+    "sortingOrder": 1,
+    "flattenedBusLocal": {
+      "position": [
+        -4.127557064973614e-08,
+        1.0090011570246116,
+        -0.5206000684027651
+      ],
+      "scale": [
+        0.22217880924503,
+        0.222180924185211,
+        0.222180924185211
+      ],
+      "widthAfterScale": 0.887314732856044,
+      "heightAfterScale": 1.790771361324151,
+      "rotationEulerDegrees": [
+        90,
+        0,
+        0
+      ]
+    }
+  }
+}
