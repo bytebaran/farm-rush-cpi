@@ -1,14 +1,26 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Game, polyline, mod } from "./game.js";
+import { Game, polyline, mod } from "./game.js?v=2";
 import { sourceLevel } from "./source-level.js";
 import { sourceMaterial, slicedSprite } from "./source-style.js";
 import { registerTools } from "./web-tools.js";
+import { createInputRedirect } from "./ad-redirect.js";
+import {
+  FRUIT_SPACING,
+  FEEDER_SPEED_MULTIPLIER,
+  feederPosition,
+  advanceFeederDistance,
+  blendConveyorPose,
+} from "./conveyor-motion.js";
 import { createTruckVisual, prepareTruckDataTexture } from "./truck-visual.js";
 
 const $ = (id) => document.getElementById(id),
   rad = Math.PI / 180;
+const inputRedirect = createInputRedirect();
+addEventListener("pageshow", (event) => {
+  if (event.persisted) inputRedirect.reset();
+});
 const renderer = new THREE.WebGLRenderer({
   canvas: $("scene"),
   antialias: true,
@@ -394,39 +406,48 @@ function cargoPose(id, index) {
 const feederVisuals = new Map();
 function renderFruit(dt) {
   for (const pool of Object.values(fruitPools)) pool.count = 0;
-  for (const cell of game.cells)
-    if (cell.color !== null)
-      fruit(
-        cell.color,
-        beltPose(game.cellPosition(cell), Math.floor(cell.key / 4), cell.lane),
-      );
+  for (const cell of game.cells) {
+    if (cell.color === null) continue;
+    const formation = cell.formation ?? Math.floor(cell.key / 4),
+      target = beltPose(game.cellPosition(cell), formation, cell.lane),
+      transfer = cell.transfer;
+    if (transfer) {
+      transfer.startPose ??=
+        feederVisuals.get(transfer.key)?.pose ??
+        beltPose(transfer.from, formation, transfer.sourceLane);
+      fruit(cell.color, blendConveyorPose(
+        transfer.startPose,
+        target,
+        (game.time - transfer.start) / Math.max(0.0001, transfer.end - transfer.start),
+      ));
+    } else fruit(cell.color, target);
+  }
   const alive = new Set();
   for (const feed of game.feeds) {
     const limit = Math.min(
       feed.pending.length,
-      Math.floor(Math.min(...feed.lanes.map((p) => p.length)) / 0.52) * 4,
+      Math.floor(Math.min(...feed.lanes.map((p) => p.length)) / FRUIT_SPACING) * 4,
     );
     for (let j = 0; j < limit; j++) {
       const item = feed.pending[j],
         key = feed.q + ":" + item.id;
       alive.add(key);
-      const p = feed.lanes[j % 4].sample((Math.floor(j / 4) + 1) * 0.52);
+      const target = feederPosition(feed, j);
       let v = feederVisuals.get(key);
       if (!v) {
-        v = { x: p.x, z: p.z };
+        v = { distance: target.distance };
         feederVisuals.set(key, v);
       }
-      const ease = 1 - Math.exp((-dt * game.multiplier) / 0.055);
-      v.x += (p.x - v.x) * ease;
-      v.z += (p.z - v.z) * ease;
-      fruit(
-        item.colorId,
-        beltPose(
-          { ...v, angle: Math.atan2(p.dx, p.dz) },
-          Math.floor(j / 4),
-          j % 4,
-        ),
+      v.distance = advanceFeederDistance(
+        v.distance, target.distance, dt,
+        level.queue.speed * FEEDER_SPEED_MULTIPLIER * game.multiplier,
       );
+      const p = feed.lanes[target.lane].sample(v.distance);
+      v.pose = beltPose(
+        { x: p.x, z: p.z, angle: Math.atan2(p.dx, p.dz) },
+        Math.floor(item.id / 4), target.lane,
+      );
+      fruit(item.colorId, v.pose);
     }
   }
   for (const key of feederVisuals.keys())
@@ -440,7 +461,7 @@ function renderFruit(dt) {
     const t = clamp((game.fruitTime - f.start) / 0.5, 0, 1),
       ease = sine(t),
       target = cargoPose(f.carId, f.index),
-      start = beltPose(f.position, Math.floor(f.cellKey / 4), f.lane),
+      start = beltPose(f.position, f.formation, f.lane),
       midpoint = start.position
         .clone()
         .add(target.position)
@@ -544,14 +565,12 @@ function sourceEase(t) {
     (-2 * u ** 3 + 3 * u * u)
   );
 }
-function tap(id) {
-  if (
-    !ready ||
-    game.won ||
-    !carViews[id] ||
-    carViews[id].bump ||
-    carViews[id].tilt
-  )
+function tap(id, countInput = true) {
+  if (!ready || game.won || !carViews[id])
+    return { ok: false, reason: "unavailable" };
+  if (countInput && !inputRedirect.record())
+    return { ok: false, reason: "redirecting" };
+  if (carViews[id].bump || carViews[id].tilt)
     return { ok: false, reason: "unavailable" };
   const result = game.tap(id);
   if (result.ok) {
@@ -793,6 +812,7 @@ function animateVehicles(dt) {
 }
 function restart() {
   clearTimeout(winTimeout);
+  inputRedirect.reset();
   for (const v of carViews) {
     v.label.remove();
     overlays.remove(v.pill);
@@ -822,7 +842,8 @@ function restart() {
 $("restart").addEventListener("click", () => ready && restart());
 $("replay").addEventListener("click", restart);
 $("scene").addEventListener("pointerdown", (event) => {
-  if (!ready) return;
+  if (!ready || game.won || !event.isPrimary || event.button !== 0) return;
+  if (!inputRedirect.record()) return;
   $("scene").setPointerCapture(event.pointerId);
   const rect = $("scene").getBoundingClientRect();
   pointer.set(
@@ -869,7 +890,8 @@ $("scene").addEventListener("pointerdown", (event) => {
     if (selected) break;
   }
   held = !selected;
-  if (selected) tap(selected.id);
+  // The canvas gesture was already counted; button/tool activations count in tap.
+  if (selected) tap(selected.id, false);
 });
 for (const name of ["pointerup", "pointercancel", "lostpointercapture"])
   $("scene").addEventListener(name, () => (held = false));

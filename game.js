@@ -1,4 +1,5 @@
 import { sweepVehicle } from "./source-level.js";
+import { feederPosition, handoffDuration } from "./conveyor-motion.js";
 // Single-level fruit loading puzzle.
 export const mod = (x, n) => ((x % n) + n) % n;
 export function polyline(points, closed = false) {
@@ -168,6 +169,9 @@ export class Game {
         ? 2
         : 1;
     this.fruitTime += dt * this.multiplier;
+    for (const cell of this.cells)
+      if (cell.transfer && this.time >= cell.transfer.end)
+        cell.transfer = null;
     const move = dt * this.level.queue.speed * this.multiplier,
       steps = Math.max(1, Math.ceil(move / (this.ring.length / 112)));
     for (let step = 0; step < steps; step++) {
@@ -177,7 +181,8 @@ export class Game {
       const candidates = [];
       for (let row = 0; row < 56; row++) {
         const cells = this.cells.slice(row * 4, row * 4 + 4);
-        if (cells.some((c) => c.color === null || c.reserved)) continue;
+        if (cells.some((c) => c.color === null || c.reserved || c.transfer))
+          continue;
         const dist = Math.abs(
           mod(
             cells[0].arc + this.phase - this.mouthArc + this.ring.length / 2,
@@ -200,6 +205,7 @@ export class Game {
             carId: target.id,
             color: cell.color,
             cellKey: cell.key,
+            formation: cell.formation ?? Math.floor(cell.key / 4),
             lane,
             start: this.fruitTime + lane * 0.15,
             end: this.fruitTime + lane * 0.15 + 0.5,
@@ -214,18 +220,39 @@ export class Game {
           const arc = mod(this.cells[row * 4].arc + previous, this.ring.length);
           if (mod(f.insertionArc - arc, this.ring.length) >= distance) continue;
           const cells = this.cells.slice(row * 4, row * 4 + 4);
-          if (cells.some((c) => c.reserved)) continue;
+          if (cells.some((c) => c.reserved || c.transfer)) continue;
+          if (cells.every((c) => c.color !== null)) continue;
           const color =
             cells.find((c) => c.color !== null)?.color ?? f.pending[0]?.colorId;
           if (color === undefined) continue;
+          const waiting = f.pending.slice(),
+            transfers = [];
           for (const cell of cells) {
             if (cell.color !== null || cell.reserved) continue;
             const index = f.pending.findIndex((p) => p.colorId === color);
             if (index < 0) break;
             const [piece] = f.pending.splice(index, 1);
+            const sourceIndex = waiting.indexOf(piece),
+              from = feederPosition(f, sourceIndex);
             cell.color = piece.colorId;
+            cell.formation = Math.floor((piece.id ?? sourceIndex) / 4);
+            cell.transfer = {
+              key: f.q + ":" + piece.id,
+              from,
+              sourceLane: from.lane,
+              start: this.time,
+            };
+            transfers.push(cell);
             f.advanced++;
           }
+          // Keep the whole formation together while following its moving slots.
+          const duration = Math.max(0, ...transfers.map((cell) =>
+            handoffDuration(
+              cell.transfer.from, this.cellPosition(cell), this.level.queue.speed,
+            ),
+          ));
+          for (const cell of transfers)
+            cell.transfer.end = this.time + duration;
         }
       }
     }
