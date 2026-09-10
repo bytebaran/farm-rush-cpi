@@ -4,7 +4,7 @@ export const FEEDER_SPEED_MULTIPLIER = 2.5;
 export function feederPosition(feed, index) {
   const lane = index % 4;
   const distance = (Math.floor(index / 4) + 1) * FRUIT_SPACING;
-  const p = feed.lanes[lane].sample(distance);
+  const p = feed.lanes[lane].sampleFrame(distance);
   return { x: p.x, z: p.z, angle: Math.atan2(p.dx, p.dz), lane, distance };
 }
 

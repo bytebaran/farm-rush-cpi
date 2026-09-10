@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Game, polyline, mod } from "./game.js?v=2";
+import { Game, polyline, mod } from "./game.js?v=3";
 import { sourceLevel } from "./source-level.js";
 import { sourceMaterial, slicedSprite } from "./source-style.js";
 import { registerTools } from "./web-tools.js";
@@ -12,7 +12,7 @@ import {
   feederPosition,
   advanceFeederDistance,
   blendConveyorPose,
-} from "./conveyor-motion.js";
+} from "./conveyor-motion.js?v=3";
 import { createTruckVisual, prepareTruckDataTexture } from "./truck-visual.js";
 
 const $ = (id) => document.getElementById(id),
@@ -442,7 +442,7 @@ function renderFruit(dt) {
         v.distance, target.distance, dt,
         level.queue.speed * FEEDER_SPEED_MULTIPLIER * game.multiplier,
       );
-      const p = feed.lanes[target.lane].sample(v.distance);
+      const p = feed.lanes[target.lane].sampleFrame(v.distance);
       v.pose = beltPose(
         { x: p.x, z: p.z, angle: Math.atan2(p.dx, p.dz) },
         Math.floor(item.id / 4), target.lane,

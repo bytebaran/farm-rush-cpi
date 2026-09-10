@@ -1,0 +1,8 @@
+{
+  "name": "farm-rush-cpi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/conveyor-motion.test.mjs"
+  }
+}

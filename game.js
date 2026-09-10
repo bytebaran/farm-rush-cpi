@@ -1,5 +1,5 @@
 import { sweepVehicle } from "./source-level.js";
-import { feederPosition, handoffDuration } from "./conveyor-motion.js";
+import { feederPosition, handoffDuration } from "./conveyor-motion.js?v=3";
 // Single-level fruit loading puzzle.
 export const mod = (x, n) => ((x % n) + n) % n;
 export function polyline(points, closed = false) {
@@ -12,24 +12,51 @@ export function polyline(points, closed = false) {
       distances.at(-1) + Math.hypot(p[i].x - p[i - 1].x, p[i].z - p[i - 1].z),
     );
   const length = distances.at(-1);
+  const directions = p.slice(1).map((b, i) => {
+    const len = distances[i + 1] - distances[i];
+    return { dx: (b.x - p[i].x) / len, dz: (b.z - p[i].z) / len };
+  });
+  const tangents = p.map((_, i) => {
+    const before = directions[i - 1] ?? (closed ? directions.at(-1) : directions[0]),
+      after = directions[i] ?? (closed ? directions[0] : directions.at(-1)),
+      dx = before.dx + after.dx,
+      dz = before.dz + after.dz,
+      magnitude = Math.hypot(dx, dz);
+    return magnitude > 1e-8 ? { dx: dx / magnitude, dz: dz / magnitude } : after;
+  });
+  function sampleAt(s, smoothFrame) {
+    s = closed ? mod(s, length) : Math.max(0, Math.min(length - 0.000001, s));
+    let i = 1;
+    while (i < distances.length - 1 && distances[i] < s) i++;
+    const a = p[i - 1],
+      b = p[i],
+      len = distances[i] - distances[i - 1],
+      t = (s - distances[i - 1]) / len;
+    let { dx, dz } = directions[i - 1];
+    if (smoothFrame) {
+      const from = tangents[i - 1],
+        to = tangents[i],
+        x = from.dx + (to.dx - from.dx) * t,
+        z = from.dz + (to.dz - from.dz) * t,
+        magnitude = Math.hypot(x, z);
+      if (magnitude > 1e-8) {
+        dx = x / magnitude;
+        dz = z / magnitude;
+      }
+    }
+    return { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, dx, dz };
+  }
   return {
     points: p,
     distances,
     length,
     sample(s) {
-      s = closed ? mod(s, length) : Math.max(0, Math.min(length - 0.000001, s));
-      let i = 1;
-      while (i < distances.length - 1 && distances[i] < s) i++;
-      const a = p[i - 1],
-        b = p[i],
-        len = distances[i] - distances[i - 1],
-        t = (s - distances[i - 1]) / len;
-      return {
-        x: a.x + (b.x - a.x) * t,
-        z: a.z + (b.z - a.z) * t,
-        dx: (b.x - a.x) / len,
-        dz: (b.z - a.z) / len,
-      };
+      return sampleAt(s, false);
+    },
+    sampleFrame(s) {
+      // Share a continuous heading between lane offsets and fruit rotation.
+      // Keep the original centerline and arc distances used by the game and road meshes.
+      return sampleAt(s, true);
     },
     nearest(point) {
       let best = { distance: Infinity, arc: 0 };
@@ -284,7 +311,7 @@ export class Game {
     }
   }
   cellPosition(cell) {
-    const p = this.ring.sample(cell.arc + this.phase),
+    const p = this.ring.sampleFrame(cell.arc + this.phase),
       offset = (cell.lane - 1.5) * 0.52;
     return {
       x: p.x + p.dz * offset,
